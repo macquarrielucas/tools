@@ -1,10 +1,7 @@
-from matplotlib.cbook import to_filehandle
-#@title { run: "auto" }
 import numpy as np
-import pylab as p
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
-from matplotlib.colors import ListedColormap
+#from matplotlib.colors import ListedColormap
 from scipy import integrate, optimize
 #The Model Class
 class speedGraph:
@@ -162,7 +159,8 @@ class speedGraph:
         axs[pb].set_xlabel('time')
         axs[pb].set_ylabel(self.vars_to_plot[1])
         #Place the legend
-        for title, ax in axs.items():
+        for ax in [axs[pa],axs[pb]]:
             ax.grid()
             ax.legend(loc='best')
         plt.tight_layout()
+        plt.show()

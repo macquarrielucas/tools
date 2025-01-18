@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=42",
+             "wheel",
+             ]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lucass_tools"
+version = "0.1.0"
+description = "My collection of tools"
+authors = [
+    {name = "Lucas", email = "macquarrielucas@gmail.com"},
+]
+dependencies = [
+    "matplotlib==3.10.0",
+    "numpy==2.2.1",
+    "scipy==1.15.1",
+]
