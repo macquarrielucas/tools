@@ -1,6 +1,7 @@
 # Tools
 
 ##Speed Graph
+
 This contains a class called `SpeedGraph` which will take in
 an ODE and graph the phase plot and the time series of the 
 chosen solutions. **The phase plot colours the solution based
