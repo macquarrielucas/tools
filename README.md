@@ -1,6 +1,6 @@
 # Tools
 
-##Speed Graph
+## Speed Graph
 
 This contains a class called `SpeedGraph` which will take in
 an ODE and graph the phase plot and the time series of the 
