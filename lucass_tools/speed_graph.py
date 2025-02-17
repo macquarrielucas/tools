@@ -164,3 +164,4 @@ class speedGraph:
             ax.legend(loc='best')
         plt.tight_layout()
         plt.show()
+        return plt
