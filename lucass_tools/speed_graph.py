@@ -134,7 +134,7 @@ class SpeedGraph:
         return np.unique(np.around(eq_points, decimals=decimals), axis=0)
 
     #Set up the graphs
-    def plot_graphs(self, **kwargs: dict) -> plt:
+    def plot_graphs(self, **kwargs: dict) -> tuple[plt.Figure, dict[str, plt.Axes]]:
         """Plot the trajectory, phase plane, and time evolution of the system.
 
         kwargs : dict, optional
@@ -194,4 +194,4 @@ class SpeedGraph:
         axs[pb].set_ylabel(self.vars_to_plot[1])
         plt.tight_layout()
         plt.show()
-        return plt
+        return figs, axs
