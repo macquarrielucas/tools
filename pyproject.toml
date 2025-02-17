@@ -16,3 +16,7 @@ dependencies = [
     "numpy==2.2.1",
     "scipy==1.15.1",
 ]
+
+[tool.ruff.lint]
+select = ["ALL"]
+

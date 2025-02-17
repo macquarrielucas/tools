@@ -1,12 +1,12 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.collections import LineCollection
-#from matplotlib.colors import ListedColormap
 from scipy import integrate, optimize
+
+
 #The Model Class
-class speedGraph:
-    """
-    A class to simulate and visualize the dynamics of a system of ODEs.
+class SpeedGraph:
+    """A class to simulate and visualize the dynamics of a system of ODEs.
 
     This class integrates a system of ordinary differential equations (ODEs)
     and provides tools to visualize the trajectory, phase plane, and velocities
@@ -14,51 +14,68 @@ class speedGraph:
 
     Attributes:
         model (callable): The ODE system to integrate. Must accept a state vector and time.
-        initValues (list[float]): Initial conditions for the system.
+        init_values (list[float]): Initial conditions for the system.
         var_labels (list[str]): Names of the state variables.
         vars_to_plot (list[str]): Variables to plot on the phase plane.
-        tInit (float): Initial time for integration. Default is 0.
-        tFinal (float): Final time for integration. Default is 1000.
-        tSpace (int): Number of time steps for integration. Default is 100000.
+        t_init (float): Initial time for integration. Default is 0.
+        t_final (float): Final time for integration. Default is 1000.
+        t_space (int): Number of time steps for integration. Default is 100000.
         data (dict): Stores the simulation data for each variable.
         eq_points (ndarray): Calculated equilibrium points of the system.
-    """
-    def __init__(self, model, initValues, var_labels, vars_to_plot, with_eqs =False, tInit=0, tFinal=300, tSpace=1000):
-        """
-        Initializes the speedGraph class.
 
-        Parameters:
-            model (callable): The ODE system to integrate.
-            initValues (list[float]): Initial conditions for the system.
-            var_labels (list[str]): Names of the state variables.
-            vars_to_plot (list[str]): Variables to plot on the phase plane.
-            with_eqs (Boolean): Whether or not to calculate the equilibria on init
-            tInit (float, optional): Initial time for integration. Default is 0.
-            tFinal (float, optional): Final time for integration. Default is 1000.
-            tSpace (int, optional): Number of time steps for integration. Default is 100000.
+    """
+
+    def __init__(self,  # noqa: PLR0913
+                 model: callable,
+                 init_values: list[float],
+                 var_labels: list[str],
+                 vars_to_plot: list[str],
+                 t_init: float=0,
+                 t_final: float=300,
+                 t_space: int=1000,
+                 with_eqs: bool =False) -> None:  # noqa: FBT001, FBT002
+        """Initialize the speedGraph class.
+
+            model : callable
+                The ODE system to integrate.
+            init_values : list[float]
+                Initial conditions for the system.
+            var_labels : list[str]
+                Names of the state variables.
+            vars_to_plot : list[str]
+                Variables to plot on the phase plane.
+            t_init : float, optional
+                Initial time for integration. Default is 0.
+            t_final : float, optional
+                Final time for integration. Default is 300.
+            t_space : int, optional
+                Number of time steps for integration. Default is 1000.
+            with_eqs : bool, optional
+                Whether or not to calculate the equilibria on init. Default is False.
 
         Example:
             >>> def model(t, X):
             ...     x, y = X
             ...     return [-y, x]
             >>> graph = speedGraph(model, [1, 0], ['x', 'y'], ['x', 'y'])
+
         """
         self.EQTOLERANCE = 5
         self.model = model
-        self.initValues = initValues
-        self.tInit = tInit
-        self.tFinal = tFinal
-        self.tSpace = tSpace
+        self.init_values = init_values
+        self.t_init = t_init
+        self.t_final = t_final
+        self.t_space = t_space
         self.var_labels = var_labels
         self.vars_to_plot = vars_to_plot
 
         # Initialize time and data
-        self.X0 = np.array(initValues)
-        self.t = np.linspace(tInit, tFinal, tSpace)
-        self.data = {name: np.zeros(self.t.size) for name in var_labels}  # Store all variables
-
+        self.X0 = np.array(init_values)
+        self.t = np.linspace(t_init, t_final, t_space)
+        #store the data in a dictionary
+        self.data = {name: np.zeros(self.t.size) for name in var_labels}
         # Compute the data from odeint
-        X = integrate.odeint(model, self.X0, self.t)
+        X = integrate.odeint(model, self.X0, self.t)  # noqa: N806
         for i, name in enumerate(var_labels):
             self.data[name] = X[:, i]  # Store each variable
 
@@ -75,18 +92,31 @@ class speedGraph:
         self.vel = np.sqrt(np.sum(self.vel_components**2, axis=1))
 
         if with_eqs:
-           self.eq_points =  self.calcEquillibriumPoints()
+           self.eq_points =  self.estimate_equilibria()
 
-    def calcEquillibriumPoints(self, decimals=2):
-        """
-        Find the equilibrium points of the system for an arbitrary number of variables.
+    def estimate_equilibria(self, decimals: int =2) -> list[float]:
+        """Find the equilibrium points of the system for an arbitrary number of variables.
+
+        This method generates a grid of initial points for optimization, creates a meshgrid 
+        for all variable combinations, and finds equilibrium points using optimization. 
+        The results are then rounded to the specified number of decimal places and duplicates 
+        are removed.
+
+        Args:
+            decimals (int): The number of decimal places to round the equilibrium points. 
+                            Default is 2.
+
+        Returns:
+            list[float]: A list of unique equilibrium points rounded to the specified number 
+                            of decimal places.
+
         """
         # Generate a grid of initial points for optimization
         ranges = [
             np.linspace(
                 self.data[var].min() - self.EQTOLERANCE,
                 self.data[var].max() + self.EQTOLERANCE,
-                10
+                10,
             )
             for var in self.var_labels
         ]
@@ -104,23 +134,27 @@ class speedGraph:
         return np.unique(np.around(eq_points, decimals=decimals), axis=0)
 
     #Set up the graphs
-    def plotGraphs(self, with_eqs = False):
-        """
-        Plots the trajectory, phase plane, and time evolution of the system.
+    def plot_graphs(self, **kwargs: dict) -> plt:
+        """Plot the trajectory, phase plane, and time evolution of the system.
 
-        This method creates subplots for the phase plane and the time evolution
-        of the selected variables.
-        Parameters:
-        with_eqs (Boolean): Whether or not to calculate and plot the equilibria based on a root finding algorithm. Terribly optimized ATM. Use with caution.
+        kwargs : dict, optional
+            Additional keyword arguments to control the plotting behavior.
+            - with_eqs (bool): Whether or not to calculate and plot the equilibria
+              based on a root finding algorithm. Terribly optimized ATM. Use with caution.
 
-        Example:
-            >>> graph.plotGraphs()
+        Returns
+        -------
+        plt : matplotlib.pyplot
+            The matplotlib.pyplot object containing the plots.
+
         """
-        pa = 'Uninfected Cells'
-        pb = 'Infected Cells'
-        pc = 'Phase plane'
+        with_eqs = kwargs.get("with_eqs", False)
+        #These actually dont need to be named.
+        pa = "Uninfected Cells"
+        pb = "Infected Cells"
+        pc = "Phase plane"
         figs, axs = plt.subplot_mosaic([
-            [[[pa],[pb]],pc]
+            [[[pa],[pb]],pc],
         ],
         width_ratios=[1,1])
         self.figs=figs
@@ -134,7 +168,7 @@ class speedGraph:
         #Create the norm
         norm = plt.Normalize(self.vel.min(), self.vel.max())
         #Join the segments into a line Collection
-        lc = LineCollection(segments, cmap='jet', norm=norm)
+        lc = LineCollection(segments, cmap="jet", norm=norm)
         # Set the values used for colormapping
         lc.set_array(self.vel)
         lc.set_linewidth(2)
@@ -143,25 +177,25 @@ class speedGraph:
         figs.colorbar(line, ax=axs[pc])
         #Plotting the phase plane
         #Initial Condition
-        axs[pc].plot(self.x[0],self.y[0],'ro')
+        axs[pc].plot(self.x[0],self.y[0],"ro")
         #Fixed points
         if with_eqs:        # Calculate equilibrium points
-            self.eq_points = self.calcEquillibriumPoints()
+            self.eq_points = self.estimate_equilibria()
             for fixed in self.eq_points:
-                axs[pc].plot(fixed[0],fixed[1],'rP')
+                axs[pc].plot(fixed[0],fixed[1],"rP")
         #Labels
         axs[pc].set_xlabel(self.vars_to_plot[0])
         axs[pc].set_ylabel(self.vars_to_plot[1])
         #Plotting functions of time
-        axs[pa].plot(self.t,self.x, 'b-', label=self.vars_to_plot[0])
+        axs[pa].plot(self.t,self.x, "b-", label=self.vars_to_plot[0])
         axs[pa].set_ylabel(self.vars_to_plot[0])
-        axs[pb].plot(self.t,self.y, 'r-', label=self.vars_to_plot[1])
-        axs[pb].set_xlabel('time')
+        axs[pb].plot(self.t,self.y, "r-", label=self.vars_to_plot[1])
+        axs[pb].set_xlabel("time")
         axs[pb].set_ylabel(self.vars_to_plot[1])
         #Place the legend
         for ax in [axs[pa],axs[pb]]:
             ax.grid()
-            ax.legend(loc='best')
+            ax.legend(loc="best")
         plt.tight_layout()
         plt.show()
         return plt
