@@ -192,10 +192,6 @@ class SpeedGraph:
         axs[pb].plot(self.t,self.y, "r-", label=self.vars_to_plot[1])
         axs[pb].set_xlabel("time")
         axs[pb].set_ylabel(self.vars_to_plot[1])
-        #Place the legend
-        for ax in [axs[pa],axs[pb]]:
-            ax.grid()
-            ax.legend(loc="best")
         plt.tight_layout()
         plt.show()
         return plt
